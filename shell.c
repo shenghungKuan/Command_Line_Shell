@@ -9,6 +9,13 @@
 #include <readline/history.h>
 #include "logger.h"
 #include "history.h"
+#include <fcntl.h>
+#include <locale.h>
+#include <pwd.h>
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 int readline_init(void){
     rl_variable_bind("show-all-if-ambiguous", "on");

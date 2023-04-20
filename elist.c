@@ -94,11 +94,11 @@ size_t elist_capacity(struct elist *list)
  */
 ssize_t elist_add(struct elist *list, void *item)
 {
-    if(list->size >= list->capacity){
-        if(elist_set_capacity(list, list->capacity * RESIZE_MULTIPLIER) == -1){
-            return -1;
-        }
-    }
+    // if(list->size >= list->capacity){
+    //     if(elist_set_capacity(list, list->capacity * RESIZE_MULTIPLIER) == -1){
+    //         return -1;
+    //     }
+    // }
     memcpy(elist_add_new(list), item, list->item_sz);
     return 0;
 }
