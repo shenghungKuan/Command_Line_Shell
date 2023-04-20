@@ -1,16 +1,19 @@
 #include <stddef.h>
-
+#include "elist.h"
 #include "history.h"
+
+struct elist *elists;
 
 void hist_init(unsigned int limit)
 {
     // TODO: set up history data structures, with 'limit' being the maximum
     // number of entries maintained.
+    elists = elist_create(limit, 256 * sizeof(char));
 }
 
 void hist_destroy(void)
 {
-
+    elist_destroy(elists);
 }
 
 void hist_add(const char *cmd)

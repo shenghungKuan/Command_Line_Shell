@@ -1,9 +1,33 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include "logger.h"
+#include "history.h"
+
+int readline_init(void){
+    rl_variable_bind("show-all-if-ambiguous", "on");
+    rl_variable_bind("colored-completion-prefix", "on");
+    return 0;
+}
+
+char *readinput(void){
+    char *line = NULL;
+    size_t line_sz = 0;
+    ssize_t result = getline(&line, &line_sz, stdin);
+    if(result == -1){
+        free(line);
+        perror("getline");
+        return NULL;
+    }
+    line[result - 1] = '\0';
+    return line;
+}
 
 /**
  * Retrieves the next token from a string.
@@ -60,29 +84,35 @@ char *next_token(char **str_ptr, const char *delim)
 
 int main(void)
 {
-    printf("Welcome to BESTSH SHELL\n");
-    printf("It's the BEST SHELL\n");
-    printf("Also, have a great day!\n");
+    rl_startup_hook = readline_init;
+    hist_init(100);
     
     // NOTE: "scripting" mode really just means reading from stdin
     //       and NOT printing a whole bunch of junk (including the prompt)
 
+    char *command;
     while (true) {
-        printf("$ ");
-        char buf[128];
-        if (fgets(buf, 128, stdin) == NULL) {
-            printf("it is time for us to quit.\n");
+        if(isatty(STDIN_FILENO)){
+            command = readline("prompt> ");
+        }else{
+            command = readinput();
+        }
+
+        if(command == NULL){
             break;
         }
-        printf("We are going to run: %s", buf);
+        
+        LOG("Input command: %s\n", command);
 
-        char *args[20];
+        hist_add(command);
+
+        char *args[20] = {0};
         int tokens = 0;
-        char *next_tok = buf;
+        char *next_tok = command;
         char *curr_tok;
         while ((curr_tok = next_token(&next_tok, " \t\r\n")) != NULL) {
-            args[tokens] = curr_tok;
-            printf("Token %02d: '%s'\n", tokens++, curr_tok);
+            args[tokens++] = curr_tok;
+            // printf("Token %02d: '%s'\n", tokens++, curr_tok);
         }
         args[tokens] = (char *) NULL;
         
@@ -91,7 +121,7 @@ int main(void)
         }
 
         if (strcmp(args[0], "exit") == 0) {
-            printf("Have a great day, bye!\n");
+            fprintf(stderr, "Have a great day, bye!\n");
             break;
         }
 
@@ -115,11 +145,15 @@ int main(void)
         } else if (child == 0) {
             execvp(args[0], args); // replaces the child process with a completely different
             perror("exec");
+            close(fileno(stdin));
             return EXIT_FAILURE;
         } else {
             // We should wait for the child to finish executing
             int status;
             wait(&status);
         }
+        free(command);
     }
+    hist_destroy();
+    return 0;
 }
