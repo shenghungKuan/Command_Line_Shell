@@ -1,3 +1,4 @@
+// Sheng-Hung Kuan
 #include <stddef.h>
 #include "elist.h"
 #include "history.h"
@@ -28,11 +29,11 @@ void hist_add(const char *cmd)
     if(cnum > bound){
         elist_remove(elists, cnum - bound);
     }
-    char *command;
+    char *command = NULL;
     *command = *cmd;
     elist_add(elists, command);
 }
-
+/*
 void hist_print(void)
 {
     for(int i = cnum - bound; i < cnum; i++){
@@ -72,3 +73,4 @@ unsigned int hist_last_cnum(void)
     // TODO: Retrieve the most recent command number.
     return cnum;
 }
+*/
