@@ -29,20 +29,32 @@ void hist_add(const char *cmd)
     if(cnum > bound){
         elist_remove(elists, cnum - bound);
     }
-    char *command = NULL;
-    *command = *cmd;
+    char *command = malloc(256 * sizeof(char));
+    strcpy(command, cmd);
     elist_add(elists, command);
+    free(command);
 }
-/*
+
 void hist_print(void)
 {
-    for(int i = cnum - bound; i < cnum; i++){
-        char *command;
-        command = elist_get(elists, i);
-        if(command == NULL){
-            return;
+    if(cnum > bound){
+        for(int i = cnum - bound; i < cnum; i++){
+            char *command;
+            command = elist_get(elists, i);
+            if(command == NULL){
+                return;
+            }
+            printf("%d %s\n", i + bound, command);
         }
-        printf("%d %s", i + bound, command);
+    }else{
+        for(int i = 0; i < cnum; i++){
+            char *command;
+            command = elist_get(elists, i);
+            if(command == NULL){
+                return;
+            }
+            printf("%d %s\n", i, command);
+        }
     }
 }
 
@@ -73,4 +85,3 @@ unsigned int hist_last_cnum(void)
     // TODO: Retrieve the most recent command number.
     return cnum;
 }
-*/

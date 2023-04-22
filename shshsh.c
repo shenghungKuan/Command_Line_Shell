@@ -97,7 +97,7 @@ int main(void)
     // NOTE: "scripting" mode really just means reading from stdin
     //       and NOT printing a whole bunch of junk (including the prompt)
 
-    char *command = NULL;
+    char *command = malloc(256 * sizeof(char));
     bool emoji = true;
     int cnum = 0;
     while (true) {
@@ -128,6 +128,7 @@ int main(void)
 
         if(isatty(STDIN_FILENO)){
             command = readline(prompt);
+            hist_add(command);
         }else{
             command = readinput();
         }
@@ -140,13 +141,14 @@ int main(void)
         
         LOG("Input command: %s\n", command);
 
-        // hist_add(command);
-
         char *args[20] = {0};
         int tokens = 0;
         char *next_tok = command;
         char *curr_tok;
         while ((curr_tok = next_token(&next_tok, " \t\r\n")) != NULL) {
+            if (strcmp(curr_tok, "#") == 0) {
+                break;
+            }
             args[tokens++] = curr_tok;
         }
         args[tokens] = (char *) NULL;
@@ -163,6 +165,14 @@ int main(void)
         // chdir system call
         if (strcmp(args[0], "cd") == 0) {
             chdir(args[1]);
+            emoji = true;
+            continue;
+        }
+
+        if (strcmp(args[0], "history") == 0) {
+            hist_print();
+            emoji = true;
+            continue;
         }
         
         // TODO:
@@ -186,7 +196,6 @@ int main(void)
             // We should wait for the child to finish executing
             int status;
             wait(&status);
-            // printf("status: %d", status);
             if(status){
                 emoji = false;
             }else{
