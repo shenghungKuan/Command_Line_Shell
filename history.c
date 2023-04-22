@@ -53,7 +53,7 @@ void hist_print(void)
             if(command == NULL){
                 return;
             }
-            printf("%d %s\n", i, command);
+            printf("%d %s\n", i + 1, command);
         }
     }
 }
@@ -63,6 +63,11 @@ const char *hist_search_prefix(char *prefix)
     // TODO: Retrieves the most recent command starting with 'prefix', or NULL
     // if no match found.
     for(int i = 0; i < bound; i++){
+        char *element;
+        element = elist_get(elists, i);
+        if(element == NULL){
+            return NULL;
+        }
         if(strcmp(elist_get(elists, i), prefix) == 0){
             return elist_get(elists, i);
         }
@@ -74,14 +79,17 @@ const char *hist_search_cnum(int command_number)
 {
     // TODO: Retrieves a particular command number. Return NULL if no match
     // found.
+    if(command_number > cnum){
+        return NULL;
+    }
     if(command_number > bound){
         return elist_get(elists, command_number - bound);
     }
-    return elist_get(elists, command_number);
+    return elist_get(elists, command_number - 1);
 }
 
 unsigned int hist_last_cnum(void)
 {
     // TODO: Retrieve the most recent command number.
-    return cnum;
+    return cnum - 1;
 }

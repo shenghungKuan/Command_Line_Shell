@@ -128,7 +128,6 @@ int main(void)
 
         if(isatty(STDIN_FILENO)){
             command = readline(prompt);
-            hist_add(command);
         }else{
             command = readinput();
         }
@@ -138,8 +137,36 @@ int main(void)
         if(command == NULL){
             break;
         }
+
+        hist_add(command);
         
         LOG("Input command: %s\n", command);
+
+        if (*command == '!') {
+            command++;
+            if(isdigit(*command)){
+                int val = strtol(command, &command, 10);
+                if(hist_search_cnum(val) == NULL){
+                    continue;
+                }
+                command--;
+                strcpy(command, hist_search_cnum(val));
+            }else if(*command == '!'){
+                if(hist_search_cnum(hist_last_cnum()) == NULL){
+                    continue;
+                }
+                command--;
+                // printf("%s\n", hist_search_cnum(hist_last_cnum()));
+                strcpy(command, hist_search_cnum(hist_last_cnum()));
+                // printf("%s\n", command);
+            }else{
+                if(hist_search_prefix(command) == NULL){
+                    continue;
+                }
+                strcpy(command, hist_search_prefix(command));
+            }
+        }
+
 
         char *args[20] = {0};
         int tokens = 0;
@@ -174,6 +201,8 @@ int main(void)
             emoji = true;
             continue;
         }
+
+
         
         // TODO:
         // * history
@@ -202,8 +231,8 @@ int main(void)
                 emoji = true;
             }
         }
-        free(command);
     }
+    free(command);
     hist_destroy();
     return 0;
 }
