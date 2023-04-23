@@ -17,6 +17,15 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+struct command_line {
+    char **tokens;
+    bool stdout_pipe;
+    char *stdout_file;
+};
+
+void sigint_handler(int signo) {    
+}
+
 int readline_init(void){
     rl_variable_bind("show-all-if-ambiguous", "on");
     rl_variable_bind("colored-completion-prefix", "on");
@@ -34,6 +43,43 @@ char *readinput(void){
     }
     line[result - 1] = '\0';
     return line;
+}
+
+void execute_pipeline(struct command_line *cmds)
+{
+    while(cmds->stdout_pipe){
+        int fd[2];
+        pipe(fd);
+
+        pid_t pid = fork();
+        if (pid == 0) {
+            /* Child */
+            close(fd[0]);
+            dup2(fd[1], STDOUT_FILENO);
+            execvp(cmds->tokens[0], cmds->tokens);
+            close(fd[1]);
+        } else {
+            /* Parent */
+            close(fd[1]);
+            dup2(fd[0], STDIN_FILENO);
+            close(fd[0]);
+        }
+        cmds += 1;
+    }
+
+    if(cmds->stdout_file != NULL){
+        int fd = open(cmds->stdout_file, O_CREAT | O_WRONLY, 0666);
+        if (fd == -1) {
+            perror("open");
+            return;
+        }
+        if (dup2(fd, fileno(stdout)) == -1) {
+            perror("dup2");
+            return;
+        }
+    }
+    
+    execvp(cmds->tokens[0], cmds->tokens);
 }
 
 /**
@@ -93,6 +139,7 @@ int main(void)
 {
     rl_startup_hook = readline_init;
     hist_init(100);
+    signal(SIGINT, sigint_handler);
     
     // NOTE: "scripting" mode really just means reading from stdin
     //       and NOT printing a whole bunch of junk (including the prompt)
@@ -170,13 +217,31 @@ int main(void)
 
         char *args[20] = {0};
         int tokens = 0;
+        int prev_tokens = 0;
         char *next_tok = command;
         char *curr_tok;
-        while ((curr_tok = next_token(&next_tok, " \t\r\n")) != NULL) {
+        int pipe_num = 0;
+        struct command_line cmd[20] = {0};
+        while ((curr_tok = next_token(&next_tok, " \t\r\n\b")) != NULL) {
             if (strcmp(curr_tok, "#") == 0) {
                 break;
             }
+            if(strcmp(curr_tok, "|") == 0){
+                args[tokens] = (char *) NULL;
+                cmd[pipe_num].stdout_pipe = true;
+                cmd[pipe_num++].tokens = args + prev_tokens;
+                prev_tokens = tokens;
+                tokens++;
+                continue;
+            }
             args[tokens++] = curr_tok;
+        }
+
+        if(pipe_num > 0){
+            cmd[pipe_num].stdout_pipe = false;
+            cmd[pipe_num++].tokens = args + prev_tokens;
+            execute_pipeline(cmd);
+            continue;
         }
         args[tokens] = (char *) NULL;
         
@@ -216,12 +281,12 @@ int main(void)
         pid_t child = fork();
         if (child == -1) {
             perror("fork");
-        } else if (child == 0) {
+        } else if (child == 0) { // child
             execvp(args[0], args); // replaces the child process with a completely different
             perror("exec");
             close(fileno(stdin));
             return EXIT_FAILURE;
-        } else {
+        } else { // parent
             // We should wait for the child to finish executing
             int status;
             wait(&status);

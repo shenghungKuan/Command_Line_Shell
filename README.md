@@ -1,25 +1,34 @@
 # Project 3: Command Line Shell
 
-See: https://www.cs.usfca.edu/~mmalensek/cs521/assignments/project-3.html
-
-TODO: Remove the link above. Your README should not depend on a link to the spec.
-
-TODO: Replace this section with a short (1-3 paragraph) description of the project. What it does, how it does it, and any features that stand out. If you ever need to refer back to this project, the description should jog your memory.
+elist: store the commands
+history: implement the history functionality, including retrieving previous commands, listing history commands  
+, and searching the command by prefix and command number  
+shshsh: the main program of the shell named shshsh
 
 ## Building
-
-TODO: Update this section as necessary.
 
 To compile and run:
 
 ```bash
 make
-./program_name
+./shshsh
 ```
 
 ## Running + Example Usage
 
-TODO: add a screenshot / text of a demo run of your program here.
+
+----------------------------------------------------------------------------------------------------------------------
+[skuan@skuan-vm P3-marcus0329]$ ./shshsh
+😍< 1 > [skuan@skuan-vm:~/P3-marcus0329]$ ls
+shshsh.c:190:main(): Input command: ls
+Makefile   elist.c  elist.o  history.c  history.o    logger.h  shshsh    shshsh.o  vgcore.2379422  vgcore.2403318
+README.md  elist.h  head     history.h  libshell.so  outputs   shshsh.c  tests     vgcore.2402634  vgcore.2749093
+😍< 2 > [skuan@skuan-vm:~/P3-marcus0329]$ history
+shshsh.c:190:main(): Input command: history
+1 ls
+2 history
+😍< 3 > [skuan@skuan-vm:~/P3-marcus0329]$ 
+----------------------------------------------------------------------------------------------------------------------
 
 ## Testing
 

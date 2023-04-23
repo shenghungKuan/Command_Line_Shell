@@ -62,14 +62,14 @@ const char *hist_search_prefix(char *prefix)
 {
     // TODO: Retrieves the most recent command starting with 'prefix', or NULL
     // if no match found.
-    for(int i = 0; i < bound; i++){
+    for(int i = bound - 1; i >= 0; i--){
         char *element;
         element = elist_get(elists, i);
         if(element == NULL){
-            return NULL;
+            continue;
         }
-        if(strcmp(elist_get(elists, i), prefix) == 0){
-            return elist_get(elists, i);
+        if(strcmp(element, prefix) == 0){
+            return element;
         }
     }
     return NULL;
