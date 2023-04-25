@@ -26,8 +26,11 @@ void hist_destroy(void)
 void hist_add(const char *cmd)
 {
     cnum += 1;
-    if(cnum > bound){
-        elist_remove(elists, cnum - bound);
+    if(cnum > bound){// cnum = 11, bound = 10, command = 1~10 ; cum = 20, 20 - 10 - 1 = 9
+        if(elist_remove(elists, 0) == -1){
+            perror("remove");
+            return;
+        }
     }
     char *command = malloc(256 * sizeof(char));
     strcpy(command, cmd);
@@ -37,14 +40,14 @@ void hist_add(const char *cmd)
 
 void hist_print(void)
 {
-    if(cnum > bound){
-        for(int i = cnum - bound; i < cnum; i++){
+    if(cnum > bound){// cnum = 11, bound = 10
+        for(int i = 0; i < bound; i++){
             char *command;
             command = elist_get(elists, i);
             if(command == NULL){
                 return;
             }
-            printf("%d %s\n", i + bound, command);
+            printf("%d %s\n", cnum + i - bound + 1, command);
         }
     }else{
         for(int i = 0; i < cnum; i++){
@@ -56,20 +59,34 @@ void hist_print(void)
             printf("%d %s\n", i + 1, command);
         }
     }
+    fflush(stdout);
 }
 
 const char *hist_search_prefix(char *prefix)
 {
     // TODO: Retrieves the most recent command starting with 'prefix', or NULL
     // if no match found.
-    for(int i = bound - 1; i >= 0; i--){
-        char *element;
-        element = elist_get(elists, i);
-        if(element == NULL){
-            continue;
+    if(cnum > bound){
+        for(int i = bound - 1; i >= 0; i--){
+            char *element;
+            element = elist_get(elists, i);
+            if(element == NULL){
+                continue;
+            }
+            if(strncmp(element, prefix, strlen(prefix)) == 0){
+                return element;
+            }
         }
-        if(strcmp(element, prefix) == 0){
-            return element;
+    }else{
+        for(int i = cnum - 1; i >= 0; i--){
+            char *element;
+            element = elist_get(elists, i);
+            if(element == NULL){
+                continue;
+            }
+            if(strncmp(element, prefix, strlen(prefix)) == 0){
+                return element;
+            }
         }
     }
     return NULL;
@@ -82,8 +99,11 @@ const char *hist_search_cnum(int command_number)
     if(command_number > cnum){
         return NULL;
     }
-    if(command_number > bound){
-        return elist_get(elists, command_number - bound);
+    if(command_number > bound){// cnum = 422, bound = 100, command_number = 400, index = 78
+        return elist_get(elists, bound - cnum + command_number - 1);
+    }
+    if(command_number < cnum - bound){
+        return NULL;
     }
     return elist_get(elists, command_number - 1);
 }
@@ -91,5 +111,5 @@ const char *hist_search_cnum(int command_number)
 unsigned int hist_last_cnum(void)
 {
     // TODO: Retrieve the most recent command number.
-    return cnum - 1;
+    return cnum;
 }

@@ -185,7 +185,10 @@ int main(void)
             break;
         }
 
-        hist_add(command);
+        if(strlen(command) == 0){
+            cnum--;
+            continue;
+        }
         
         LOG("Input command: %s\n", command);
 
@@ -203,9 +206,7 @@ int main(void)
                     continue;
                 }
                 command--;
-                // printf("%s\n", hist_search_cnum(hist_last_cnum()));
                 strcpy(command, hist_search_cnum(hist_last_cnum()));
-                // printf("%s\n", command);
             }else{
                 if(hist_search_prefix(command) == NULL){
                     continue;
@@ -214,6 +215,7 @@ int main(void)
             }
         }
 
+        hist_add(command);
 
         char *args[20] = {0};
         int tokens = 0;
@@ -223,17 +225,17 @@ int main(void)
         int pipe_num = 0;
         struct command_line cmd[20] = {0};
         while ((curr_tok = next_token(&next_tok, " \t\r\n\b")) != NULL) {
-            if (strcmp(curr_tok, "#") == 0) {
+            if (strncmp(curr_tok, "#", 1) == 0) {
                 break;
             }
-            if(strcmp(curr_tok, "|") == 0){
-                args[tokens] = (char *) NULL;
-                cmd[pipe_num].stdout_pipe = true;
-                cmd[pipe_num++].tokens = args + prev_tokens;
-                prev_tokens = tokens;
-                tokens++;
-                continue;
-            }
+            // if(strcmp(curr_tok, "|") == 0){
+            //     args[tokens] = (char *) NULL;
+            //     cmd[pipe_num].stdout_pipe = true;
+            //     cmd[pipe_num++].tokens = args + prev_tokens;
+            //     prev_tokens = tokens;
+            //     tokens++;
+            //     continue;
+            // }
             args[tokens++] = curr_tok;
         }
 

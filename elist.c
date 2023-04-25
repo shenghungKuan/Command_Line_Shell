@@ -59,33 +59,33 @@ void elist_destroy(struct elist *list)
  * 
  * @return -1 on failure, 0 on success
  */
-int elist_set_capacity(struct elist *list, size_t capacity)
-{
-    if(capacity <= 0){
-        capacity = 1;
-        list->size = 0;
-    }
+// int elist_set_capacity(struct elist *list, size_t capacity)
+// {
+//     if(capacity <= 0){
+//         capacity = 1;
+//         list->size = 0;
+//     }
 
-    if((list->element_storage = realloc(list->element_storage, capacity * list->item_sz)) != NULL){
-        list->capacity = capacity;
-        if(list->capacity < list->size){
-            list->size = list->capacity;
-        }
-        return 0;
-    }else{
-        free(list->element_storage);
-    }
-    return -1;
-}
+//     if((list->element_storage = realloc(list->element_storage, capacity * list->item_sz)) != NULL){
+//         list->capacity = capacity;
+//         if(list->capacity < list->size){
+//             list->size = list->capacity;
+//         }
+//         return 0;
+//     }else{
+//         free(list->element_storage);
+//     }
+//     return -1;
+// }
 
 /**
  * Retrieves the elist capacity (amount of space set aside for elements in
  * memory).
  */
-size_t elist_capacity(struct elist *list)
-{
-    return list->capacity;
-}
+// size_t elist_capacity(struct elist *list)
+// {
+//     return list->capacity;
+// }
 
 /**
  * Adds an item to the end of the list.
@@ -120,14 +120,14 @@ void *elist_add_new(struct elist *list)
  *
  * @return -1 on failure, 0 on success
  */
-int elist_set(struct elist *list, size_t idx, void *item)
-{
-    if(idx_is_valid(list, idx)){
-        memcpy(list->element_storage + idx * list->item_sz, item, list->item_sz);
-        return 0;
-    }
-    return -1;
-}
+// int elist_set(struct elist *list, size_t idx, void *item)
+// {
+//     if(idx_is_valid(list, idx)){
+//         memcpy(list->element_storage + idx * list->item_sz, item, list->item_sz);
+//         return 0;
+//     }
+//     return -1;
+// }
 
 /**
  * Retrieves a particular item from the list based on its index.
@@ -166,30 +166,30 @@ int elist_remove(struct elist *list, size_t idx)
 /**
  * "Clears" the array by resetting its size to 0.
  */
-void elist_clear(struct elist *list)
-{
-    list->size = 0;
-}
+// void elist_clear(struct elist *list)
+// {
+//     list->size = 0;
+// }
 
 /**
  * Clears the array AND zeroes out its memory.
  */
-void elist_clear_mem(struct elist *list)
-{
-    // list = calloc(list->size, list->size * list->item_sz);
-    memset(list->element_storage, 0, list->item_sz *list->size);
-    list->size = 0;
-}
+// void elist_clear_mem(struct elist *list)
+// {
+//     // list = calloc(list->size, list->size * list->item_sz);
+//     memset(list->element_storage, 0, list->item_sz *list->size);
+//     list->size = 0;
+// }
 
 /**
  * Sorts the list using the given comparator. This function does not actually
  * implement a sorting algorithm, but simply acts as interface to the qsort
  * function.
  */
-void elist_sort(struct elist *list, int (*comparator)(const void *, const void *))
-{
-    qsort(list->element_storage, list->size, list->item_sz, comparator);
-}
+// void elist_sort(struct elist *list, int (*comparator)(const void *, const void *))
+// {
+//     qsort(list->element_storage, list->size, list->item_sz, comparator);
+// }
 
 bool idx_is_valid(struct elist *list, size_t idx)
 {
