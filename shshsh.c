@@ -224,6 +224,8 @@ int main(void)
         char *curr_tok;
         int pipe_num = 0;
         struct command_line cmd[20] = {0};
+        // if((char *s = strchr(command, '|')) != NULL)
+
         while ((curr_tok = next_token(&next_tok, " \t\r\n\b")) != NULL) {
             if (strncmp(curr_tok, "#", 1) == 0) {
                 break;
@@ -258,6 +260,9 @@ int main(void)
 
         // chdir system call
         if (strcmp(args[0], "cd") == 0) {
+            if(args[1] == NULL){
+                chdir(getenv("HOME"));
+            }
             chdir(args[1]);
             emoji = true;
             continue;
