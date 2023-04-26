@@ -45,42 +45,7 @@ char *readinput(void){
     return line;
 }
 
-void execute_pipeline(struct command_line *cmds)
-{
-    while(cmds->stdout_pipe){
-        int fd[2];
-        pipe(fd);
 
-        pid_t pid = fork();
-        if (pid == 0) {
-            /* Child */
-            close(fd[0]);
-            dup2(fd[1], STDOUT_FILENO);
-            execvp(cmds->tokens[0], cmds->tokens);
-            close(fd[1]);
-        } else {
-            /* Parent */
-            close(fd[1]);
-            dup2(fd[0], STDIN_FILENO);
-            close(fd[0]);
-        }
-        cmds += 1;
-    }
-
-    if(cmds->stdout_file != NULL){
-        int fd = open(cmds->stdout_file, O_CREAT | O_WRONLY, 0666);
-        if (fd == -1) {
-            perror("open");
-            return;
-        }
-        if (dup2(fd, fileno(stdout)) == -1) {
-            perror("dup2");
-            return;
-        }
-    }
-    
-    execvp(cmds->tokens[0], cmds->tokens);
-}
 
 /**
  * Retrieves the next token from a string.
@@ -134,6 +99,105 @@ char *next_token(char **str_ptr, const char *delim)
     return current_ptr;
 }
 
+void execute_pipeline(char *command)
+{
+    char *args[100] = {0};
+    int tokens = 0;
+    char *next_tok = command;
+    char *curr_tok;
+    while ((curr_tok = next_token(&next_tok, " \t\r\n\b")) != NULL) {
+            if (strncmp(curr_tok, "#", 1) == 0) {
+                break;
+            }
+            if(strcmp(curr_tok, "<")){
+                args[tokens++] = (char*) NULL;
+
+                int file = open(args[0], O_RDONLY, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdin)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+
+                LOG("redirection: %s\n", *args);
+            }
+            else if(strcmp(curr_tok, ">>")){
+                args[tokens++] = (char*) NULL;
+
+                int file = open(args[0], O_CREAT | O_WRONLY | O_APPEND, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdout)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+
+                LOG("redirection: %s\n", *args);
+            }
+            else if(strcmp(curr_tok, ">")){
+                args[tokens++] = (char*) NULL;
+
+                int file = open(args[0], O_CREAT | O_WRONLY, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdout)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+
+                LOG("redirection: %s\n", *args);
+            }
+            else if(strcmp(curr_tok, "|") == 0){
+                args[tokens++] = (char*) NULL;
+
+                LOG("pipe: %s\n", *args);
+                int fd[2];
+                pipe(fd);
+
+                pid_t pid = fork();
+                if (pid == 0) {
+                    /* Child */
+                    close(fd[0]);
+                    dup2(fd[1], STDOUT_FILENO);
+                    execvp(args[0], args);
+                    perror("exec in pipe");
+                    close(fd[1]);
+                    exit(0);
+                } else {
+                    /* Parent */
+                    // int status;
+                    // wait(&status);
+                    close(fd[1]);
+                    dup2(fd[0], STDIN_FILENO);
+                    close(fd[0]);
+                    
+                }
+                tokens = 0;
+            }else{
+                args[tokens++] = curr_tok;
+            }
+            // LOG("token: %s\n", *cmds[tokens].tokens);
+    }
+    args[tokens++] = (char*) NULL;
+
+    LOG("pipe: %s\n", *args);
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        execvp(args[0], args);
+    } else {
+        int status;
+        wait(&status);
+    }
+
+}
 
 int main(void)
 {
@@ -144,10 +208,11 @@ int main(void)
     // NOTE: "scripting" mode really just means reading from stdin
     //       and NOT printing a whole bunch of junk (including the prompt)
 
-    char *command = malloc(256 * sizeof(char));
+    
     bool emoji = true;
     int cnum = 0;
     while (true) {
+        char *command = malloc(256 * sizeof(char));
         cnum += 1;
         char *prompt = NULL;
         char cwd[40];
@@ -182,11 +247,13 @@ int main(void)
         free(prompt);
 
         if(command == NULL){
+            free(command);
             break;
         }
 
         if(strlen(command) == 0){
             cnum--;
+            free(command);
             continue;
         }
         
@@ -197,20 +264,24 @@ int main(void)
             if(isdigit(*command)){
                 int val = strtol(command, &command, 10);
                 if(hist_search_cnum(val) == NULL){
+                    free(--command);
                     continue;
                 }
                 command--;
                 strcpy(command, hist_search_cnum(val));
             }else if(*command == '!'){
                 if(hist_search_cnum(hist_last_cnum()) == NULL){
+                    free(--command);
                     continue;
                 }
                 command--;
                 strcpy(command, hist_search_cnum(hist_last_cnum()));
             }else{
                 if(hist_search_prefix(command) == NULL){
+                    free(--command);
                     continue;
                 }
+                // command--;
                 strcpy(command, hist_search_prefix(command));
             }
         }
@@ -219,42 +290,34 @@ int main(void)
 
         char *args[20] = {0};
         int tokens = 0;
-        int prev_tokens = 0;
         char *next_tok = command;
         char *curr_tok;
-        int pipe_num = 0;
-        struct command_line cmd[20] = {0};
-        // if((char *s = strchr(command, '|')) != NULL)
+        char *s = strchr(command, '|');
+        char *r = strchr(command, '>');
+        char *l = strchr(command, '<');
+        if(s != NULL || r != NULL || l != NULL){
+            execute_pipeline(command);
+            free(command);
+            continue;
+        }
 
         while ((curr_tok = next_token(&next_tok, " \t\r\n\b")) != NULL) {
             if (strncmp(curr_tok, "#", 1) == 0) {
                 break;
             }
-            // if(strcmp(curr_tok, "|") == 0){
-            //     args[tokens] = (char *) NULL;
-            //     cmd[pipe_num].stdout_pipe = true;
-            //     cmd[pipe_num++].tokens = args + prev_tokens;
-            //     prev_tokens = tokens;
-            //     tokens++;
-            //     continue;
-            // }
             args[tokens++] = curr_tok;
         }
 
-        if(pipe_num > 0){
-            cmd[pipe_num].stdout_pipe = false;
-            cmd[pipe_num++].tokens = args + prev_tokens;
-            execute_pipeline(cmd);
-            continue;
-        }
         args[tokens] = (char *) NULL;
         
         if (args[0] == (char *) NULL) {
+            free(command);
             continue;
         }
 
         if (strcmp(args[0], "exit") == 0) {
             fprintf(stderr, "Have a great day, bye!\n");
+            free(command);
             break;
         }
 
@@ -262,17 +325,22 @@ int main(void)
         if (strcmp(args[0], "cd") == 0) {
             if(args[1] == NULL){
                 chdir(getenv("HOME"));
+            }else{
+                chdir(args[1]);
             }
-            chdir(args[1]);
             emoji = true;
+            free(command);
             continue;
         }
 
         if (strcmp(args[0], "history") == 0) {
             hist_print();
             emoji = true;
+            free(command);
             continue;
         }
+        // free(command);
+
 
 
         
@@ -290,7 +358,7 @@ int main(void)
             perror("fork");
         } else if (child == 0) { // child
             execvp(args[0], args); // replaces the child process with a completely different
-            perror("exec");
+            perror("exec outside");
             close(fileno(stdin));
             return EXIT_FAILURE;
         } else { // parent
@@ -303,8 +371,8 @@ int main(void)
                 emoji = true;
             }
         }
+        
     }
-    free(command);
     hist_destroy();
     return 0;
 }
