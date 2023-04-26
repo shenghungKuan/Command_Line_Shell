@@ -105,14 +105,33 @@ void execute_pipeline(char *command)
     int tokens = 0;
     char *next_tok = command;
     char *curr_tok;
+    /*
+    int redir = 0;
+    char *input_file[2] = {0};
+    char *output_file[2] = {0};
+    char *append_file[2] = {0};
+    */
     while ((curr_tok = next_token(&next_tok, " \t\r\n\b")) != NULL) {
             if (strncmp(curr_tok, "#", 1) == 0) {
                 break;
             }
-            if(strcmp(curr_tok, "<")){
-                args[tokens++] = (char*) NULL;
+/*
+            if(redir == 1){
+                input_file[0] = curr_tok;
+                input_file[1] = (char*) NULL;
+            }else if(redir == 2){
+                append_file[0] = curr_tok;
+                append_file[1] = (char*) NULL;
+            }else if(redir == 3){
+                output_file[0] = curr_tok;
+                output_file[1] = (char*) NULL;
+            }
 
-                int file = open(args[0], O_RDONLY, 0666);
+            if(redir == 1){
+                // args[tokens++] = (char*) NULL;
+                LOG("file: %s\n", *args);
+
+                int file = open(input_file[0], O_RDONLY, 0666);
                 if(file == -1){
                     perror("file open");
                     return;
@@ -121,43 +140,61 @@ void execute_pipeline(char *command)
                     perror("dup2");
                     return;
                 }
+                redir = 0;
+            }else if(redir == 2){
+                // args[tokens++] = (char*) NULL;
+                LOG("file: %s\n", *args);
+
+                int file = open(append_file[0], O_CREAT | O_WRONLY | O_APPEND, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdout)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+                redir = 0;
+            }else if(redir == 3){
+                // args[tokens++] = (char*) NULL;
+                LOG("file: %s\n", *args);
+
+                int file = open(output_file[0], O_CREAT | O_WRONLY, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdout)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+                redir = 0;
+            }
+
+
+            if(strcmp(curr_tok, "<")){
+                // args[tokens++] = (char*) NULL;
+                redir = 1;
 
                 LOG("redirection: %s\n", *args);
             }
             else if(strcmp(curr_tok, ">>")){
-                args[tokens++] = (char*) NULL;
-
-                int file = open(args[0], O_CREAT | O_WRONLY | O_APPEND, 0666);
-                if(file == -1){
-                    perror("file open");
-                    return;
-                }
-                if (dup2(file, fileno(stdout)) == -1) {
-                    perror("dup2");
-                    return;
-                }
-
+                // args[tokens++] = (char*) NULL;
+                redir = 2;
+            
                 LOG("redirection: %s\n", *args);
             }
             else if(strcmp(curr_tok, ">")){
-                args[tokens++] = (char*) NULL;
-
-                int file = open(args[0], O_CREAT | O_WRONLY, 0666);
-                if(file == -1){
-                    perror("file open");
-                    return;
-                }
-                if (dup2(file, fileno(stdout)) == -1) {
-                    perror("dup2");
-                    return;
-                }
-
+                // args[tokens++] = (char*) NULL;
+                redir = 3;
+    
                 LOG("redirection: %s\n", *args);
             }
-            else if(strcmp(curr_tok, "|") == 0){
+*/
+            if(strcmp(curr_tok, "|") == 0){
                 args[tokens++] = (char*) NULL;
 
-                LOG("pipe: %s\n", *args);
+                // LOG("pipe: %s\n", *args);
                 int fd[2];
                 pipe(fd);
 
@@ -169,7 +206,8 @@ void execute_pipeline(char *command)
                     execvp(args[0], args);
                     perror("exec in pipe");
                     close(fd[1]);
-                    exit(0);
+                    close(fileno(stdin));
+                    exit(EXIT_FAILURE);
                 } else {
                     /* Parent */
                     // int status;
@@ -183,19 +221,15 @@ void execute_pipeline(char *command)
             }else{
                 args[tokens++] = curr_tok;
             }
-            // LOG("token: %s\n", *cmds[tokens].tokens);
+
     }
     args[tokens++] = (char*) NULL;
 
     LOG("pipe: %s\n", *args);
 
-    pid_t pid = fork();
-    if (pid == 0) {
-        execvp(args[0], args);
-    } else {
-        int status;
-        wait(&status);
-    }
+    execvp(args[0], args);
+    close(fileno(stdin));
+    exit(EXIT_FAILURE);
 
 }
 
@@ -260,29 +294,30 @@ int main(void)
         LOG("Input command: %s\n", command);
 
         if (*command == '!') {
-            command++;
-            if(isdigit(*command)){
-                int val = strtol(command, &command, 10);
+            char *command_instead = command;
+            command_instead++;
+            if(isdigit(*command_instead)){
+                int val = strtol(command_instead, &command_instead, 10);
                 if(hist_search_cnum(val) == NULL){
-                    free(--command);
-                    continue;
-                }
-                command--;
-                strcpy(command, hist_search_cnum(val));
-            }else if(*command == '!'){
-                if(hist_search_cnum(hist_last_cnum()) == NULL){
-                    free(--command);
-                    continue;
-                }
-                command--;
-                strcpy(command, hist_search_cnum(hist_last_cnum()));
-            }else{
-                if(hist_search_prefix(command) == NULL){
-                    free(--command);
+                    free(command);
                     continue;
                 }
                 // command--;
-                strcpy(command, hist_search_prefix(command));
+                strcpy(command, hist_search_cnum(val));
+            }else if(*command_instead == '!'){
+                if(hist_search_cnum(hist_last_cnum()) == NULL){
+                    free(command);
+                    continue;
+                }
+                // command--;
+                strcpy(command, hist_search_cnum(hist_last_cnum()));
+            }else{
+                if(hist_search_prefix(command_instead) == NULL){
+                    free(command);
+                    continue;
+                }
+                // command--;
+                strcpy(command, hist_search_prefix(command_instead));
             }
         }
 
@@ -296,8 +331,15 @@ int main(void)
         char *r = strchr(command, '>');
         char *l = strchr(command, '<');
         if(s != NULL || r != NULL || l != NULL){
-            execute_pipeline(command);
-            free(command);
+            
+            pid_t pid = fork();
+            if (pid == 0) {
+                execute_pipeline(command);
+            } else {
+                int status;
+                wait(&status);
+            }
+            // free(command);
             continue;
         }
 
