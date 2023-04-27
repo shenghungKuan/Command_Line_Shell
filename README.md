@@ -3,7 +3,10 @@
 elist: store the commands
 history: implement the history functionality, including retrieving previous commands, listing history commands  
 , and searching the command by prefix and command number  
-shshsh: the main program of the shell named shshsh
+shshsh: the main program of the shell named shshsh  
+  
+test case 15: void* -> char*  
+test case 17: leak in readinput
 
 ## Building
 

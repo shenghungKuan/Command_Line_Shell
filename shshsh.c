@@ -103,9 +103,9 @@ void execute_pipeline(char *command)
     char *curr_tok;
     
     int redir = 0;
-    char *input_file[1] = {0};
-    char *output_file[1] = {0};
-    char *append_file[1] = {0};
+    // char *input_file[1] = {0};
+    // char *output_file[1] = {0};
+    // char *append_file[1] = {0};
 
     
     while ((curr_tok = next_token(&next_tok, " \t\r\n\b")) != NULL) {
@@ -115,9 +115,11 @@ void execute_pipeline(char *command)
 
             if(redir == 1){
                 // strcpy(input_file, curr_tok);
-                input_file[0] = curr_tok;
+                // input_file[0] = curr_tok;
                 // input_file[1] = (char*) NULL;
-                int file = open(input_file[0], O_RDONLY, 0666);
+                // int file = open(input_file[0], O_RDONLY, 0666);
+                // close(fileno(stdin));
+                int file = open(curr_tok, O_RDONLY, 0666);
                 if(file == -1){
                     perror("file open");
                     return;
@@ -126,12 +128,15 @@ void execute_pipeline(char *command)
                     perror("dup2");
                     return;
                 }
+                close(file);
                 redir = 4;
             }else if(redir == 2){
                 // strcpy(input_file, curr_tok);
-                append_file[0] = curr_tok;
+                // append_file[0] = curr_tok;
                 // append_file[1] = (char*) NULL;
-                int file = open(append_file[0], O_CREAT | O_WRONLY | O_APPEND, 0666);
+                // int file = open(append_file[0], O_CREAT | O_WRONLY | O_APPEND, 0666);
+                // close(fileno(stdout));
+                int file = open(curr_tok, O_CREAT | O_WRONLY | O_APPEND, 0666);
                 if(file == -1){
                     perror("file open");
                     return;
@@ -140,12 +145,15 @@ void execute_pipeline(char *command)
                     perror("dup2");
                     return;
                 }
+                close(file);
                 redir = 4;
             }else if(redir == 3){
                 // strcpy(input_file, curr_tok);
-                output_file[0] = curr_tok;
+                // output_file[0] = curr_tok;
                 // output_file[1] = (char*) NULL;
-                int file = open(output_file[0], O_CREAT | O_WRONLY, 0666);
+                // int file = open(output_file[0], O_CREAT | O_WRONLY, 0666);
+                // close(fileno(stdout));
+                int file = open(curr_tok, O_CREAT | O_WRONLY, 0666);
                 if(file == -1){
                     perror("file open");
                     return;
@@ -154,6 +162,7 @@ void execute_pipeline(char *command)
                     perror("dup2");
                     return;
                 }
+                close(file);
                 redir = 4;
             }
 /*
@@ -249,7 +258,7 @@ void execute_pipeline(char *command)
             }
 
     }
-    args[tokens++] = (char*) NULL;
+    args[tokens] = (char*) NULL;
     
     LOG("pipe: %s\n", *args);
 
