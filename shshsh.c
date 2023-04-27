@@ -17,11 +17,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-struct command_line {
-    char **tokens;
-    bool stdout_pipe;
-    char *stdout_file;
-};
+
 
 void sigint_handler(int signo) {    
 }
@@ -105,28 +101,62 @@ void execute_pipeline(char *command)
     int tokens = 0;
     char *next_tok = command;
     char *curr_tok;
-    /*
+    
     int redir = 0;
-    char *input_file[2] = {0};
-    char *output_file[2] = {0};
-    char *append_file[2] = {0};
-    */
+    char *input_file[1] = {0};
+    char *output_file[1] = {0};
+    char *append_file[1] = {0};
+
+    
     while ((curr_tok = next_token(&next_tok, " \t\r\n\b")) != NULL) {
             if (strncmp(curr_tok, "#", 1) == 0) {
                 break;
             }
-/*
-            if(redir == 1){
-                input_file[0] = curr_tok;
-                input_file[1] = (char*) NULL;
-            }else if(redir == 2){
-                append_file[0] = curr_tok;
-                append_file[1] = (char*) NULL;
-            }else if(redir == 3){
-                output_file[0] = curr_tok;
-                output_file[1] = (char*) NULL;
-            }
 
+            if(redir == 1){
+                // strcpy(input_file, curr_tok);
+                input_file[0] = curr_tok;
+                // input_file[1] = (char*) NULL;
+                int file = open(input_file[0], O_RDONLY, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdin)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+                redir = 4;
+            }else if(redir == 2){
+                // strcpy(input_file, curr_tok);
+                append_file[0] = curr_tok;
+                // append_file[1] = (char*) NULL;
+                int file = open(append_file[0], O_CREAT | O_WRONLY | O_APPEND, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdout)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+                redir = 4;
+            }else if(redir == 3){
+                // strcpy(input_file, curr_tok);
+                output_file[0] = curr_tok;
+                // output_file[1] = (char*) NULL;
+                int file = open(output_file[0], O_CREAT | O_WRONLY, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdout)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+                redir = 4;
+            }
+/*
             if(redir == 1){
                 // args[tokens++] = (char*) NULL;
                 LOG("file: %s\n", *args);
@@ -170,27 +200,23 @@ void execute_pipeline(char *command)
                 }
                 redir = 0;
             }
-
-
-            if(strcmp(curr_tok, "<")){
-                // args[tokens++] = (char*) NULL;
-                redir = 1;
-
-                LOG("redirection: %s\n", *args);
-            }
-            else if(strcmp(curr_tok, ">>")){
-                // args[tokens++] = (char*) NULL;
-                redir = 2;
-            
-                LOG("redirection: %s\n", *args);
-            }
-            else if(strcmp(curr_tok, ">")){
-                // args[tokens++] = (char*) NULL;
-                redir = 3;
-    
-                LOG("redirection: %s\n", *args);
-            }
 */
+
+            if(strcmp(curr_tok, "<") == 0){
+                redir = 1;
+                LOG("redirection: %s\n", *args);
+            }
+            else if(strcmp(curr_tok, ">>") == 0){
+                redir = 2;            
+                LOG("redirection: %s\n", *args);
+            }
+            else if(strcmp(curr_tok, ">") == 0){
+                redir = 3;    
+                LOG("redirection: %s\n", *args);
+            }
+
+
+
             if(strcmp(curr_tok, "|") == 0){
                 args[tokens++] = (char*) NULL;
 
@@ -218,13 +244,13 @@ void execute_pipeline(char *command)
                     
                 }
                 tokens = 0;
-            }else{
+            }else if(redir == 0){
                 args[tokens++] = curr_tok;
             }
 
     }
     args[tokens++] = (char*) NULL;
-
+    
     LOG("pipe: %s\n", *args);
 
     execvp(args[0], args);
@@ -246,7 +272,7 @@ int main(void)
     bool emoji = true;
     int cnum = 0;
     while (true) {
-        char *command = malloc(256 * sizeof(char));
+        char *command;// = malloc(256 * sizeof(char));
         cnum += 1;
         char *prompt = NULL;
         char cwd[40];
