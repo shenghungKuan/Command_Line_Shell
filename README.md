@@ -14,8 +14,14 @@ make
 ./shshsh
 ```
 
-## Running + Example Usage
+## The prompt has the following items:  
 
+* Item1: the current working directory  
+* Item2: the number of the command  
+* Item3: an emoji that indicates whether the last command is valid  
+* Item4: the username   
+
+## Running + Example Usage  
 
 ----------------------------------------------------------------------------------------------------------------------
 [skuan@skuan-vm P3-marcus0329]$ ./shshsh
