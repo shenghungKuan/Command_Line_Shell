@@ -97,7 +97,7 @@ char *next_token(char **str_ptr, const char *delim)
 
 void execute_pipeline(char *command)
 {
-    char *args[100] = {0};
+    char *args[1024] = {0};
     int tokens = 0;
     char *next_tok = command;
     char *curr_tok;
@@ -112,30 +112,8 @@ void execute_pipeline(char *command)
             if (strncmp(curr_tok, "#", 1) == 0) {
                 break;
             }
-
-            if(redir == 1){
-                // strcpy(input_file, curr_tok);
-                // input_file[0] = curr_tok;
-                // input_file[1] = (char*) NULL;
-                // int file = open(input_file[0], O_RDONLY, 0666);
-                // close(fileno(stdin));
-                int file = open(curr_tok, O_RDONLY, 0666);
-                if(file == -1){
-                    perror("file open");
-                    return;
-                }
-                if (dup2(file, fileno(stdin)) == -1) {
-                    perror("dup2");
-                    return;
-                }
-                close(file);
-                redir = 4;
-            }else if(redir == 2){
-                // strcpy(input_file, curr_tok);
-                // append_file[0] = curr_tok;
-                // append_file[1] = (char*) NULL;
-                // int file = open(append_file[0], O_CREAT | O_WRONLY | O_APPEND, 0666);
-                // close(fileno(stdout));
+            
+            if(redir == 2){
                 int file = open(curr_tok, O_CREAT | O_WRONLY | O_APPEND, 0666);
                 if(file == -1){
                     perror("file open");
@@ -147,13 +125,23 @@ void execute_pipeline(char *command)
                 }
                 close(file);
                 redir = 4;
-            }else if(redir == 3){
-                // strcpy(input_file, curr_tok);
-                // output_file[0] = curr_tok;
-                // output_file[1] = (char*) NULL;
-                // int file = open(output_file[0], O_CREAT | O_WRONLY, 0666);
-                // close(fileno(stdout));
-                int file = open(curr_tok, O_CREAT | O_WRONLY, 0666);
+            } 
+            else if(redir == 1){
+                int file = open(curr_tok, O_RDONLY, 0666);
+                if(file == -1){
+                    perror("file open");
+                    return;
+                }
+                if (dup2(file, fileno(stdin)) == -1) {
+                    perror("dup2");
+                    return;
+                }
+                close(file);
+                redir = 4;
+            }
+
+            if(redir == 3){
+                int file = open(curr_tok, O_CREAT | O_WRONLY | O_TRUNC, 0666);
                 if(file == -1){
                     perror("file open");
                     return;
@@ -165,62 +153,18 @@ void execute_pipeline(char *command)
                 close(file);
                 redir = 4;
             }
-/*
-            if(redir == 1){
-                // args[tokens++] = (char*) NULL;
-                LOG("file: %s\n", *args);
-
-                int file = open(input_file[0], O_RDONLY, 0666);
-                if(file == -1){
-                    perror("file open");
-                    return;
-                }
-                if (dup2(file, fileno(stdin)) == -1) {
-                    perror("dup2");
-                    return;
-                }
-                redir = 0;
-            }else if(redir == 2){
-                // args[tokens++] = (char*) NULL;
-                LOG("file: %s\n", *args);
-
-                int file = open(append_file[0], O_CREAT | O_WRONLY | O_APPEND, 0666);
-                if(file == -1){
-                    perror("file open");
-                    return;
-                }
-                if (dup2(file, fileno(stdout)) == -1) {
-                    perror("dup2");
-                    return;
-                }
-                redir = 0;
-            }else if(redir == 3){
-                // args[tokens++] = (char*) NULL;
-                LOG("file: %s\n", *args);
-
-                int file = open(output_file[0], O_CREAT | O_WRONLY, 0666);
-                if(file == -1){
-                    perror("file open");
-                    return;
-                }
-                if (dup2(file, fileno(stdout)) == -1) {
-                    perror("dup2");
-                    return;
-                }
-                redir = 0;
-            }
-*/
-
-            if(strcmp(curr_tok, "<") == 0){
-                redir = 1;
-                LOG("redirection: %s\n", *args);
-            }
-            else if(strcmp(curr_tok, ">>") == 0){
+            
+            if(strcmp(curr_tok, ">>") == 0){
                 redir = 2;            
                 LOG("redirection: %s\n", *args);
             }
             else if(strcmp(curr_tok, ">") == 0){
                 redir = 3;    
+                LOG("redirection: %s\n", *args);
+            }
+
+            if(strcmp(curr_tok, "<") == 0){
+                redir = 1;
                 LOG("redirection: %s\n", *args);
             }
 
@@ -245,8 +189,6 @@ void execute_pipeline(char *command)
                     exit(EXIT_FAILURE);
                 } else {
                     /* Parent */
-                    // int status;
-                    // wait(&status);
                     close(fd[1]);
                     dup2(fd[0], STDIN_FILENO);
                     close(fd[0]);
@@ -374,7 +316,7 @@ int main(void)
                 int status;
                 wait(&status);
             }
-            // free(command);
+            free(command);
             continue;
         }
 

@@ -14,7 +14,7 @@ void hist_init(unsigned int limit)
 {
     // TODO: set up history data structures, with 'limit' being the maximum
     // number of entries maintained.
-    elists = elist_create(limit, 256 * sizeof(char));
+    elists = elist_create(limit, 2560 * sizeof(char));
     bound = limit;
 }
 
@@ -32,8 +32,9 @@ void hist_add(const char *cmd)
             return;
         }
     }
-    char *command = malloc(256 * sizeof(char));
+    char *command = malloc(2560 * sizeof(char));
     strcpy(command, cmd);
+    // elist_add(elists, strdup(cmd));
     elist_add(elists, command);
     free(command);
 }
