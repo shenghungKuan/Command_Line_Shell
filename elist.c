@@ -112,7 +112,7 @@ ssize_t elist_add(struct elist *list, void *item)
 
 void *elist_add_new(struct elist *list)
 {
-    return list->element_storage + list->size++ * list->item_sz;
+    return (char*)list->element_storage + list->size++ * list->item_sz;
 }
 
 /**
@@ -139,7 +139,7 @@ void *elist_get(struct elist *list, size_t idx)
     if(idx >= list->size){
         return NULL;
     }
-    return list->element_storage + idx * list->item_sz;
+    return (char*)list->element_storage + idx * list->item_sz;
 }
 
 size_t elist_size(struct elist *list)
@@ -155,8 +155,8 @@ size_t elist_size(struct elist *list)
 int elist_remove(struct elist *list, size_t idx)
 {
     if(idx_is_valid(list, idx)){
-        memmove(list->element_storage + idx * list->item_sz,
-         list->element_storage + (idx + 1) * list->item_sz, list->item_sz * (list->size - idx));
+        memmove((char*)list->element_storage + idx * list->item_sz,
+         (char*)list->element_storage + (idx + 1) * list->item_sz, list->item_sz * (list->size - idx));
          list->size--;
         return 0;
     }

@@ -358,7 +358,6 @@ int main(void)
             free(command);
             continue;
         }
-        // free(command);
 
 
 
@@ -390,6 +389,7 @@ int main(void)
                 emoji = true;
             }
         }
+        free(command);
         
     }
     hist_destroy();
