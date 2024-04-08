@@ -1,6 +1,7 @@
-# Project 3: Command Line Shell
+# Command Line Shell
 
-elist: store the commands
+This is a program that simulates command line shell with some custom features.  
+elist: store the commands  
 history: implement the history functionality, including retrieving previous commands, listing history commands  
 , and searching the command by prefix and command number  
 shshsh: the main program of the shell named shshsh  
@@ -25,18 +26,17 @@ make
 
 ## Running + Example Usage  
 
-----------------------------------------------------------------------------------------------------------------------
-[skuan@skuan-vm P3-marcus0329]$ ./shshsh
-😍< 1 > [skuan@skuan-vm:~/P3-marcus0329]$ ls
-shshsh.c:190:main(): Input command: ls
-Makefile   elist.c  elist.o  history.c  history.o    logger.h  shshsh    shshsh.o  vgcore.2379422  vgcore.2403318
-README.md  elist.h  head     history.h  libshell.so  outputs   shshsh.c  tests     vgcore.2402634  vgcore.2749093
-😍< 2 > [skuan@skuan-vm:~/P3-marcus0329]$ history
-shshsh.c:190:main(): Input command: history
-1 ls
-2 history
-😍< 3 > [skuan@skuan-vm:~/P3-marcus0329]$ 
-----------------------------------------------------------------------------------------------------------------------
+[skuan@skuan-vm P3-marcus0329]$ ./shshsh  
+😍< 1 > [skuan@skuan-vm:\~/P3-marcus0329]$ ls  
+shshsh.c:190:main(): Input command: ls  
+Makefile   elist.c  elist.o  history.c  history.o    logger.h  shshsh    shshsh.o  vgcore.2379422  vgcore.2403318  
+README.md  elist.h  head     history.h  libshell.so  outputs   shshsh.c  tests     vgcore.2402634  vgcore.2749093  
+😍< 2 > [skuan@skuan-vm:\~/P3-marcus0329]$ history  
+shshsh.c:190:main(): Input command: history  
+1 ls  
+2 history  
+😍< 3 > [skuan@skuan-vm:~/P3-marcus0329]$  
+
 
 ## Testing
 
