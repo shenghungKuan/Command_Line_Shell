@@ -28,7 +28,7 @@ make
 [username@hostname current_working_directory]$ ./shshsh  
 😍< 1 > [username@hostname current_working_directory]$ ls  
 shshsh.c:190:main(): Input command: ls  
-Makefile   elist.c  history.c  logger.h  README.md  elist.h  head  history.h  libshell.so  outputs   shshsh.c  tests
+Makefile   elist.c  history.c  logger.h  README.md  elist.h  head  history.h  shshsh.c  
 😍< 2 > [username@hostname current_working_directory]$ history  
 shshsh.c:190:main(): Input command: history  
 1 ls  
