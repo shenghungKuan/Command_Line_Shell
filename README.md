@@ -27,7 +27,7 @@ make
 [username@hostname current_working_directory]$ make  
 [username@hostname current_working_directory]$ ./shshsh  
 😍< 1 > [username@hostname current_working_directory]$ ls  
-Makefile   elist.c  history.c  logger.h  README.md  elist.h  head  history.h  shshsh.c  
+Makefile &nbsp; elist.c &nbsp; history.c &nbsp; logger.h &nbsp; README.md &nbsp; elist.h &nbsp; head &nbsp; history.h &nbsp; shshsh.c  
 😍< 2 > [username@hostname current_working_directory]$ history  
 1 ls  
 2 history  
