@@ -26,30 +26,5 @@ history.o: history.c history.h logger.h elist.h
 elist.o: elist.c elist.h
 
 clean:
-	rm -f $(bin) $(obj) $(lib) vgcore.*
+	rm -f $(bin) $(obj) $(lib)
 
-
-# Tests --
-
-test_repo=usf-cs521-sp23/P3-Tests
-
-test: $(all) ./.testlib/run_tests ./tests
-	@DEBUG="$(debug)" ./.testlib/run_tests $(run)
-
-grade: ./.testlib/grade
-	./.testlib/grade $(run)
-
-testupdate: testclean test
-
-testclean:
-	rm -rf tests .testlib
-
-./tests:
-	rm -rf ./tests
-	git clone https://github.com/$(test_repo) tests
-
-./.testlib/run_tests:
-	rm -rf ./.testlib
-	git clone https://github.com/malensek/cowtest.git .testlib
-
-./.testlib/grade: ./.testlib/run_tests
